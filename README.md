@@ -48,14 +48,16 @@ pip install -r requirements.txt
 Each script is self-contained and writes to a subdirectory of `outputs/`.
 
 ```bash
-# From the repo root
+# From the repo root (paths below are repo-relative; scripts use absolute paths internally so any cwd works)
 python src/generate_fig01_overview.py            # → outputs/figure_overview/Figure_2a_Overview_PDFs.pdf
-python src/generate_fig02to05_case1.py           # → outputs/figures/Figure_2{b,c,d,e}_*.pdf
-python src/generate_fig06_logitshift.py          # → outputs/.../Figure_2e1_LogitShift_GFI.pdf
-python src/generate_fig07_case2_deviation.py     # → outputs/case2_skew_channel/Figure_2i_CLEAN_Deviation.pdf
-python src/generate_fig08to09_case3.py           # → outputs/case3_tail_channel/Figure_2l,2n_*.pdf
-python src/generate_fig10to14_empirical.py       # → outputs/Figure_Empirical_*.pdf
+python src/generate_fig02to05_case1.py           # → outputs/case1_overview/Figure_2{b,c,d,e,f,g,h,i}_*.pdf
+python src/generate_fig06_logitshift.py          # → outputs/case1_indices/Figure_2e{1,2,3,4}_*.pdf
+python src/generate_fig07_case2_deviation.py     # → outputs/case2_deviation/Figure_2i_CLEAN_Deviation.pdf
+python src/generate_fig08to09_case3.py           # → outputs/case3_tail/Figure_2{j,k,l,m,n}_*.pdf
+python src/generate_fig10to14_empirical.py       # → outputs/Figure_Empirical_*.{pdf,png} + outputs/Table_*.{csv,tex}
 ```
+
+The empirical script also writes four summary tables alongside the figures: `Table_Fitted_Parameters.csv`, `Table_Sample_Statistics.csv`, `Table_Fitted_Moments.csv`, and `Table_NTS_Calibration.tex`.
 
 Figure-name mapping to the paper (manuscript filename → generator output):
 
