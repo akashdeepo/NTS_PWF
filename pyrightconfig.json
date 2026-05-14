@@ -1,0 +1,7 @@
+{
+  "include": ["src"],
+  "extraPaths": ["lib/temStaPy_v0.5", "src"],
+  "reportMissingImports": "warning",
+  "venvPath": ".",
+  "pythonVersion": "3.10"
+}

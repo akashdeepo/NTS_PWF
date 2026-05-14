@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Figures / outputs (regenerable)
+outputs/**/*.pdf
+outputs/**/*.png
+!outputs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# OS / OneDrive
+desktop.ini
+
+# Local notes
+NOTES.local.md
+TODO.local.md
