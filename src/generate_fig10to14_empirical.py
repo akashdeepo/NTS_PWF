@@ -254,12 +254,8 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
 
     # Left: Histogram with fitted PDF
     ax1 = axes[0]
-
-    # Histogram
     counts, bins, _ = ax1.hist(returns, bins=100, density=True, alpha=0.7,
                                color='steelblue', edgecolor='white', label='SPY Returns')
-
-    # Fitted NTS PDF
     x_range = np.linspace(returns.min(), returns.max(), 500)
     pdf_fitted = dnts(x_range, fitted_params)
     ax1.plot(x_range, pdf_fitted, 'r-', lw=2, label='Fitted NTS')
@@ -267,12 +263,11 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
     ax1.set_xlabel('Daily Log-Return')
     ax1.set_ylabel('Density')
     ax1.set_title('Linear scale')
-    ax1.legend()
     ax1.set_xlim([-0.06, 0.06])
+    plt.setp(ax1.get_xticklabels(), rotation=30, ha='right')
 
     # Right: Log-scale to show tails
     ax2 = axes[1]
-
     ax2.hist(returns, bins=100, density=True, alpha=0.7,
              color='steelblue', edgecolor='white', label='SPY Returns')
     ax2.plot(x_range, pdf_fitted, 'r-', lw=2, label='Fitted NTS')
@@ -281,11 +276,15 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
     ax2.set_xlabel('Daily Log-Return')
     ax2.set_ylabel('Density (log scale)')
     ax2.set_title('Log scale (tail behavior)')
-    ax2.legend()
     ax2.set_xlim([-0.12, 0.12])
     ax2.set_ylim([1e-3, 100])
+    plt.setp(ax2.get_xticklabels(), rotation=30, ha='right')
 
-    plt.tight_layout()
+    # Single shared legend below the two panels (no per-panel duplicates)
+    handles, labels = ax1.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=2, fontsize=11,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+    plt.tight_layout(rect=[0, 0.06, 1, 1])  # reserve bottom strip for legend
 
     # Save
     png_path = os.path.join(output_dir, 'Figure_Empirical_NTS_Fit.png')
@@ -332,13 +331,17 @@ def plot_pwf_channels(results, p_grid, output_dir):
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel('$w(p)$')
         ax.set_title(channel_titles.get(channel_name, channel_name))
-        ax.legend(loc='upper left', fontsize=10)  # smaller + corner so legend doesn't cover the diagonal/curves in tight 3-panel layout
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1])
         ax.set_aspect('equal')
         ax.grid(True, alpha=0.3)
+        plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-    plt.tight_layout()
+    # Single shared legend below all three panels
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=len(labels), fontsize=11,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
 
     # Save
     png_path = os.path.join(output_dir, 'Figure_Empirical_PWF_Channels.png')
@@ -386,11 +389,14 @@ def plot_pwf_deviations(results, p_grid, output_dir):
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel('$w(p) - p$ (%)')
         ax.set_title(channel_titles.get(channel_name, channel_name))
-        ax.legend(loc='best')
         ax.set_xlim([0, 1])
         ax.grid(True, alpha=0.3)
+        plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-    plt.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=len(labels), fontsize=11,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
 
     # Save
     png_path = os.path.join(output_dir, 'Figure_Empirical_PWF_Deviations.png')
@@ -456,11 +462,14 @@ def plot_indices(results, p_grid, output_dir):
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel(index_ylabels[index_name])
         ax.set_title(title)
-        ax.legend(loc='best', fontsize=10)
         ax.set_xlim([0, 1])
         ax.grid(True, alpha=0.3)
+        plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-    plt.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=len(labels), fontsize=11,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
 
     # Save
     png_path = os.path.join(output_dir, 'Figure_Empirical_Indices.png')
@@ -509,11 +518,14 @@ def plot_all_channels_indices(results, p_grid, output_dir):
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel(r'$G_{FI}(p)$')
         ax.set_title(channel_titles[channel_name])
-        ax.legend(loc='best')
         ax.set_xlim([0, 1])
         ax.grid(True, alpha=0.3)
+        plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-    plt.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=len(labels), fontsize=11,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
 
     # Save
     png_path = os.path.join(output_dir, 'Figure_Empirical_GFI_AllChannels.png')
