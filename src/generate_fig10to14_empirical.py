@@ -49,12 +49,12 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # fonts now print at a comfortable size when the figure is scaled to
 # width=0.7\textwidth in LaTeX.
 plt.rcParams.update({
-    'font.size': 18,
-    'axes.labelsize': 18,
-    'axes.titlesize': 20,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'legend.fontsize': 14,
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'axes.titlesize': 14,        # smaller than body so multi-panel titles fit
+    'xtick.labelsize': 13,
+    'ytick.labelsize': 13,
+    'legend.fontsize': 13,
     'figure.figsize': (10, 6),
     'figure.dpi': 150,
     'savefig.dpi': 300,
@@ -266,7 +266,7 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
 
     ax1.set_xlabel('Daily Log-Return')
     ax1.set_ylabel('Density')
-    ax1.set_title('SPY Returns vs Fitted NTS Distribution')
+    ax1.set_title('Linear scale')
     ax1.legend()
     ax1.set_xlim([-0.06, 0.06])
 
@@ -280,7 +280,7 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
     ax2.set_yscale('log')
     ax2.set_xlabel('Daily Log-Return')
     ax2.set_ylabel('Density (log scale)')
-    ax2.set_title('Tail Behavior (Log Scale)')
+    ax2.set_title('Log scale (tail behavior)')
     ax2.legend()
     ax2.set_xlim([-0.12, 0.12])
     ax2.set_ylim([1e-3, 100])
@@ -307,9 +307,9 @@ def plot_pwf_channels(results, p_grid, output_dir):
     fig, axes = plt.subplots(1, 3, figsize=(9, 3.5))
 
     channel_titles = {
-        'scale': 'Scale Channel (Volatility)',
-        'skew': 'Skew Channel (Asymmetry)',
-        'tail': 'Tail Channel (Thickness)'
+        'scale': 'Scale Channel',
+        'skew': 'Skew Channel',
+        'tail': 'Tail Channel'
     }
 
     colors = {'benchmark': 'black', 'fearful': 'red', 'greedy': 'green'}
@@ -500,7 +500,7 @@ def plot_all_channels_indices(results, p_grid, output_dir):
 
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel(r'$G_{FI}(p)$')
-        ax.set_title(f'{channel_titles[channel_name]}: Logit-Shift Index')
+        ax.set_title(channel_titles[channel_name])
         ax.legend(loc='best')
         ax.set_xlim([0, 1])
         ax.grid(True, alpha=0.3)
