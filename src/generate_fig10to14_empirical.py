@@ -332,7 +332,7 @@ def plot_pwf_channels(results, p_grid, output_dir):
         ax.set_xlabel('Prior probability $p$')
         ax.set_ylabel('$w(p)$')
         ax.set_title(channel_titles.get(channel_name, channel_name))
-        ax.legend(loc='lower right')
+        ax.legend(loc='upper left', fontsize=10)  # smaller + corner so legend doesn't cover the diagonal/curves in tight 3-panel layout
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1])
         ax.set_aspect('equal')
@@ -423,6 +423,14 @@ def plot_indices(results, p_grid, output_dir):
         r'Jensen-Shannon Index $S_{JS}(p)$',
         r'Elasticity $E(p)$'
     ]
+    # Explicit y-axis labels keyed by index_name (don't build LaTeX by
+    # string-replace -- the 'E' index has no underscore, so the prior
+    # `.replace('_', '$_{') + '}$'` trick produced a stray '}$').
+    index_ylabels = {
+        'G_FI': r'$G_{\mathrm{FI}}(p)$',
+        'S_JS': r'$S_{\mathrm{JS}}(p)$',
+        'E':    r'$E(p)$',
+    }
 
     for idx, (index_name, title) in enumerate(zip(index_names, index_titles)):
         ax = axes[idx]
@@ -446,9 +454,9 @@ def plot_indices(results, p_grid, output_dir):
                        lw=2, label=scenario_name.capitalize())
 
         ax.set_xlabel('Prior probability $p$')
-        ax.set_ylabel(index_name.replace('_', '$_{') + '}$')
+        ax.set_ylabel(index_ylabels[index_name])
         ax.set_title(title)
-        ax.legend(loc='best')
+        ax.legend(loc='best', fontsize=10)
         ax.set_xlim([0, 1])
         ax.grid(True, alpha=0.3)
 
