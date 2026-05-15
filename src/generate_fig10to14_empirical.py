@@ -44,16 +44,17 @@ DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'outputs')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Plotting style — bumped per Lindquist review ("reduce the size and make the
-# text on it larger"). Multi-panel figsizes are also reduced below so text
-# remains readable when the figure is scaled to width=0.7\textwidth in LaTeX.
+# Plotting style — bumped per second Lindquist review ("the text on figures
+# is too small"). Combined with the smaller per-panel figsizes below, the
+# fonts now print at a comfortable size when the figure is scaled to
+# width=0.7\textwidth in LaTeX.
 plt.rcParams.update({
-    'font.size': 14,
-    'axes.labelsize': 14,
-    'axes.titlesize': 15,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
+    'font.size': 18,
+    'axes.labelsize': 18,
+    'axes.titlesize': 20,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    'legend.fontsize': 14,
     'figure.figsize': (10, 6),
     'figure.dpi': 150,
     'savefig.dpi': 300,
@@ -249,7 +250,7 @@ def plot_fitted_distribution(returns, fitted_params, output_dir):
     """
     print("\nGenerating Figure: Fitted NTS Distribution...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5))
 
     # Left: Histogram with fitted PDF
     ax1 = axes[0]
@@ -303,7 +304,7 @@ def plot_pwf_channels(results, p_grid, output_dir):
     """
     print("\nGenerating Figure: PWF Channels...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3.5))
 
     channel_titles = {
         'scale': 'Scale Channel (Volatility)',
@@ -356,7 +357,7 @@ def plot_pwf_deviations(results, p_grid, output_dir):
     """
     print("\nGenerating Figure: PWF Deviations...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3.5))
 
     channel_titles = {
         'scale': 'Scale Channel',
@@ -408,7 +409,7 @@ def plot_indices(results, p_grid, output_dir):
     """
     print("\nGenerating Figure: Information-Theoretic Indices...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3.5))
 
     # Use scale channel (most dramatic effects)
     channel_results = results['scale']
@@ -470,7 +471,7 @@ def plot_all_channels_indices(results, p_grid, output_dir):
     """
     print("\nGenerating Figure: G_FI Across All Channels...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3.5))
 
     channel_titles = {
         'scale': 'Scale Channel',
