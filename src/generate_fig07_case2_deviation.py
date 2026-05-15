@@ -109,16 +109,16 @@ ax.plot(u_grid[idx_greed_max], 100*dev_greed[idx_greed_max], 'ro',
 ax.axhspan(0, 4, alpha=0.05, color='red', zorder=0)
 ax.axhspan(-4, 0, alpha=0.05, color='blue', zorder=0)
 
-# Labels and title
-ax.set_xlabel('Objective Probability (u)', fontsize=16, fontweight='bold')
-ax.set_ylabel('PWF Deviation [%]:  100 × [w(u) - u]', fontsize=16, fontweight='bold')
-ax.set_title('Probability-Weighting Function Deviations — Skew Channel\n' +
-             'Variance-Matched NTS Distributions (G=15/1, σ=0.85)',
-             fontsize=17, fontweight='bold', pad=20)
+# Labels and title (fontsizes calibrated so 7x4.5" figure prints cleanly
+# at width=0.7\textwidth without the title or y-label being clipped)
+ax.set_xlabel('Objective probability $u$', fontsize=12)
+ax.set_ylabel(r'PWF deviation $100\times[w(u)-u]$ (%)', fontsize=12)
+ax.set_title('PWF Deviations — Skew Channel ($G/M=15/1$, $\\sigma=0.85$)',
+             fontsize=12, pad=8)
 
 # Legend
-ax.legend(fontsize=13, loc='upper left', framealpha=0.95, edgecolor='black',
-          fancybox=True, shadow=True)
+ax.legend(fontsize=10, loc='upper left', framealpha=0.95, edgecolor='black',
+          fancybox=True, shadow=False)
 
 # Grid
 ax.grid(True, alpha=0.25, linestyle='--', linewidth=0.8, zorder=0)
@@ -126,9 +126,8 @@ ax.set_xlim(0, 1)
 ax.set_ylim(-4.5, 4.5)
 
 # Tick formatting
-ax.tick_params(axis='both', which='major', labelsize=13, width=1.5, length=6)
+ax.tick_params(axis='both', which='major', labelsize=11, width=1.2, length=5)
 
-# Tight layout
 plt.tight_layout()
 
 # Save
@@ -176,15 +175,14 @@ ax.axhspan(0, 4, alpha=0.06, color='red', zorder=0)
 ax.axhspan(-4, 0, alpha=0.06, color='blue', zorder=0)
 
 # Labels
-ax.set_xlabel('Objective Probability (u)', fontsize=16, fontweight='bold')
-ax.set_ylabel('PWF Deviation [%]:  100 × [w(u) - u]', fontsize=16, fontweight='bold')
-ax.set_title('PWF Deviations — ZOOMED View [0.1, 0.9]\n' +
-             'Skew Channel (G=15/1, Variance-Matched)',
-             fontsize=17, fontweight='bold', pad=20)
+ax.set_xlabel('Objective probability $u$', fontsize=12)
+ax.set_ylabel(r'PWF deviation $100\times[w(u)-u]$ (%)', fontsize=12)
+ax.set_title('PWF Deviations (zoomed view) — Skew Channel ($G/M=15/1$, $\\sigma=0.85$)',
+             fontsize=12, pad=8)
 
 # Legend
-ax.legend(fontsize=14, loc='upper left', framealpha=0.95, edgecolor='black',
-          fancybox=True, shadow=True)
+ax.legend(fontsize=10, loc='upper left', framealpha=0.95, edgecolor='black',
+          fancybox=True, shadow=False)
 
 # Grid
 ax.grid(True, alpha=0.25, linestyle='--', linewidth=0.8, zorder=0)
@@ -196,7 +194,7 @@ ax.set_ylim(100*np.min(dev_fear_zoom) - y_margin,
             100*np.max(dev_greed_zoom) + y_margin)
 
 # Tick formatting
-ax.tick_params(axis='both', which='major', labelsize=13, width=1.5, length=6)
+ax.tick_params(axis='both', which='major', labelsize=11, width=1.2, length=5)
 
 plt.tight_layout()
 
