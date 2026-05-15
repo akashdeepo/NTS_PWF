@@ -134,11 +134,14 @@ ax.plot(x_grid, _scipy_norm.cdf(x_grid), color='dimgray', linestyle=(0, (6, 4)),
 ax.set_xlabel('x')
 ax.set_ylabel(r'$F_X(x)$')
 ax.set_title('CDFs of Normal Tempered-Stable distributions')
-ax.legend()
 ax.grid(True, alpha=0.3)
 ax.set_xlim(-6, 6)
 ax.set_ylim(0, 1)
-plt.tight_layout()
+# Legend placed BELOW the plot in two columns so it doesn't cover
+# the central transition region of the CDF curves
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2,
+          fontsize=10, framealpha=0.95)
+plt.tight_layout(rect=[0, 0.04, 1, 1])
 
 save_path = os.path.join(OUTPUT_DIR, 'Figure_2b_NTS_CDFs')
 plt.savefig(save_path + '.png', dpi=300, bbox_inches='tight')

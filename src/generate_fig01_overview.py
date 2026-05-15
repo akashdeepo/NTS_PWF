@@ -110,8 +110,11 @@ ax.set_title("Densities under single-channel NTS perturbations")
 ax.set_xlim(-6, 6)
 ax.set_ylim(0, None)
 ax.grid(True, alpha=0.3)
-ax.legend(loc="upper right", framealpha=0.95)
-plt.tight_layout()
+# Legend BELOW the plot in two columns so it doesn't cover the density
+# peak at x=0 or the right-tail of the high-volatility curve
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2,
+          fontsize=10, framealpha=0.95)
+plt.tight_layout(rect=[0, 0.04, 1, 1])
 
 save_path = os.path.join(OUTPUT_DIR, "Figure_2a_Overview_PDFs")
 plt.savefig(save_path + ".png", dpi=300, bbox_inches="tight")
