@@ -62,8 +62,9 @@ out['empirical']['sample'] = {
 out['empirical']['fit'] = {'params': fit, **{k: round(v, 6) for k, v in nts_moments(fit).items()}}
 cdf = lambda x: pnts(np.atleast_1d(x), fit)
 ks, cvm = stats.kstest(r, cdf), stats.cramervonmises(r, cdf)
-ksn = stats.kstest(r, 'norm', args=(r.mean(), r.std()))
-cvmn = stats.cramervonmises(r, 'norm', args=(r.mean(), r.std()))
+cdf_norm = stats.norm(r.mean(), r.std()).cdf
+ksn = stats.kstest(r, cdf_norm)
+cvmn = stats.cramervonmises(r, cdf_norm)
 out['empirical']['gof'] = {
     'NTS': {'KS': float(ks.statistic), 'KS_p': float(ks.pvalue), 'CvM': float(cvm.statistic), 'CvM_p': float(cvm.pvalue)},
     'Gaussian': {'KS': float(ksn.statistic), 'KS_p': float(ksn.pvalue), 'CvM': float(cvmn.statistic), 'CvM_p': float(cvmn.pvalue)},

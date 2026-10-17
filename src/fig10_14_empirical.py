@@ -56,8 +56,9 @@ pd.DataFrame({'Parameter': ['alpha', 'theta', 'beta', 'gamma', 'mu'], 'Estimate'
 cdf_nts = lambda x: pnts(np.atleast_1d(x), fit)
 ks = stats.kstest(r, cdf_nts)
 cvm = stats.cramervonmises(r, cdf_nts)
-ks_n = stats.kstest(r, 'norm', args=(r.mean(), r.std()))
-cvm_n = stats.cramervonmises(r, 'norm', args=(r.mean(), r.std()))
+cdf_norm = stats.norm(r.mean(), r.std()).cdf
+ks_n = stats.kstest(r, cdf_norm)
+cvm_n = stats.cramervonmises(r, cdf_norm)
 gof = pd.DataFrame([
     ['NTS', ks.statistic, ks.pvalue, cvm.statistic, cvm.pvalue],
     ['Gaussian', ks_n.statistic, ks_n.pvalue, cvm_n.statistic, cvm_n.pvalue],
