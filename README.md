@@ -1,105 +1,90 @@
 # Probability-Weighting Functions for Normal Tempered-Stable Laws
 
-Code and data that reproduce every figure and table in
+Code and data that reproduce every figure, table and number in
 
 > Akash Deep, Bhathiya Divelgama, A. Alexandre Trindade, W. Brent Lindquist, Svetlozar T. Rachev, Frank J. Fabozzi.
 > **Probability-Weighting Functions for Normal Tempered-Stable Laws: Orthogonal Channels and Information-Theoretic Indices.** Working paper, 2026.
 
-All 14 figures and both tables regenerate from a clean checkout in under a minute.
+One command regenerates the paper's 14 figures and 4 tables in about 30 seconds:
 
-## The idea in brief
+```bash
+pip install -r requirements.txt
+python src/run_all.py
+```
 
-A probability-weighting function (PWF) describes how an agent turns objective probabilities into decision weights. Instead of assuming a parametric shape (Prelec, Tversky–Kahneman), the paper derives the PWF from a change in beliefs about returns. A *prior* return distribution is mapped to a *posterior* one:
+## What the paper does
+
+A probability-weighting function (PWF) turns objective probabilities into decision weights. Instead of assuming a parametric shape, the paper derives the PWF from a change in beliefs about returns. With a *prior* return distribution and a *posterior* one,
 
 $$w(p) = F_{\text{post}}\big(Q_{\text{prior}}(p)\big), \qquad p \in [0,1],$$
 
-where $Q_{\text{prior}}$ is the prior quantile function and $F_{\text{post}}$ is the posterior CDF. If the two distributions are equal, then $w(p) = p$. Any departure from the diagonal measures how much more (or less) weight the posterior places on that region of outcomes.
+where $Q_{\text{prior}}$ is the prior quantile function and $F_{\text{post}}$ the posterior CDF. If the two distributions coincide, $w(p) = p$.
 
-Both distributions are **normal tempered-stable (NTS)**, which captures the semi-heavy tails and skewness of real returns while keeping a closed-form characteristic function. The posterior differs from the prior along one of three **orthogonal channels**:
+Both distributions are **normal tempered-stable (NTS)** in the parameterization of Kim, Rachev, Bianchi and Fabozzi (2010), which is what the vendored `temStaPy` library implements:
 
-| Channel | Parameter changed | Interpretation |
-|---|---|---|
-| Scale (volatility) | $\sigma$ | more or less dispersion |
-| Skew (asymmetry) | tempering ratio $G/M$ | heavier left or right tail |
-| Tail thickness | Blumenthal–Getoor index $Y$ | more or less jump activity |
+$$X = \mu + \beta\,(T-1) + \gamma\sqrt{T}\,Z, \qquad T \sim \text{tempered-stable subordinator with } \mathbb{E}[T]=1,\ \operatorname{Var}(T) = \tfrac{2-\alpha}{2\theta}.$$
 
-Each PWF is summarised by three indices:
+The parameter vector is always `[alpha, theta, beta, gamma, mu]`: tail index, tempering, asymmetry, scale, location. The posterior differs from the prior along one of three **channels**, each with the variance held fixed:
 
-- **Fisher-normalised logit shift:** $G_{\text{FI}}(p) = \dfrac{\operatorname{logit} w(p) - \operatorname{logit} p}{\sqrt{p(1-p)}}$
-- **Signed Jensen–Shannon divergence:** $S_{\text{JS}}(p) = \operatorname{sgn}\big(w(p)-p\big)\sqrt{2\,\mathrm{JSD}(p)}$
-- **Log-odds elasticity:** $E(p) = \dfrac{d}{dp}\big[\operatorname{logit} w(p) - \operatorname{logit} p\big]$
+| Channel | What changes | Fearful | Greedy |
+|---|---|---|---|
+| Scale | $\gamma$ | $\times 1.4$ | $\times 0.7$ |
+| Skew | $\beta$ (with $\gamma$ reset to keep the variance) | skewness $-0.5$ | skewness $+0.5$ |
+| Tail | $\alpha$ | $-0.3$ | $+0.3$ |
 
-The empirical section fits NTS to SPY daily log-returns (2015–2025) and repeats the channel analysis around the fitted parameters.
-
-## Quick start
-
-Requires Python 3.10 or later.
-
-```bash
-git clone https://github.com/akashdeepo/NTS_PWF.git
-cd NTS_PWF
-pip install -r requirements.txt
-
-# Regenerate everything (about 40 s in total)
-for f in src/generate_fig*.py; do python "$f"; done
-```
-
-Each script can also be run on its own and from any working directory. Output goes to `outputs/`, which git ignores.
+Each PWF is summarised by three indices: the Fisher-normalised logit shift $G_{\text{FI}}(p)$, the signed Jensen–Shannon divergence $S_{\text{JS}}(p)$ and the log-odds elasticity $E(p)$. Section 4 of the paper applies the channels to a stylized benchmark $(\alpha,\theta,\beta,\gamma,\mu) = (1.2, 0.4, 0, 1, 0)$, which has unit variance and excess kurtosis 3; Section 5 applies them around NTS parameters fitted to SPY daily log-returns, 2015–2025.
 
 ## Paper figures and tables → scripts
 
-| Paper | Script (`src/`) | Output file (`outputs/`) |
+| Paper | Script (`src/`) | Output (`outputs/figures/` or `outputs/tables/`) |
 |---|---|---|
-| Fig. 1 | `generate_fig01_overview.py` | `figure_overview/Figure_2a_Overview_PDFs.pdf` |
-| Fig. 2 | `generate_fig02to05_case1.py` | `case1_overview/Figure_2b_NTS_CDFs.pdf` |
-| Fig. 3 | 〃 | `case1_overview/Figure_2c_NTS_Quantiles.pdf` |
-| Fig. 4 | 〃 | `case1_overview/Figure_2d_Case1_PWF.pdf` |
-| Fig. 5 | 〃 | `case1_overview/Figure_2e_Case1_GreedFearIndex.pdf` |
-| Fig. 6 | `generate_fig06_logitshift.py` | `case1_indices/Figure_2e1_LogitShift_GFI.pdf` |
-| Fig. 7 | `generate_fig07_case2_deviation.py` | `case2_deviation/Figure_2i_CLEAN_Deviation.pdf` |
-| Fig. 8 | `generate_fig08to09_case3.py` | `case3_tail/Figure_2l_PWFs_Case3.pdf` |
-| Fig. 9 | 〃 | `case3_tail/Figure_2n_InfoMetrics_Case3.pdf` |
-| Fig. 10 | `generate_fig10to14_empirical.py` | `Figure_Empirical_NTS_Fit.pdf` |
-| Fig. 11 | 〃 | `Figure_Empirical_PWF_Channels.pdf` |
-| Fig. 12 | 〃 | `Figure_Empirical_PWF_Deviations.pdf` |
-| Fig. 13 | 〃 | `Figure_Empirical_GFI_AllChannels.pdf` |
-| Fig. 14 | 〃 | `Figure_Empirical_Indices.pdf` |
-| Tables 1–2 | 〃 | `Table_Sample_Statistics.csv`, `Table_Fitted_Parameters.csv`, `Table_NTS_Calibration.tex` |
+| Figs 1–3 | `fig01_03_distributions.py` | `fig01_densities`, `fig02_cdfs`, `fig03_quantiles` |
+| Figs 4–6 | `fig04_06_scale.py` | `fig04_scale_pwf`, `fig05_scale_gamma`, `fig06_scale_gfi` |
+| Fig 7 | `fig07_skew.py` | `fig07_skew_deviation` |
+| Figs 8–9 | `fig08_09_tail.py` | `fig08_tail_pwf`, `fig09_tail_indices` |
+| Figs 10–14, Tables 2–4 | `fig10_14_empirical.py` | `fig10_spy_fit` … `fig14_spy_indices`; `table_*.csv`, `table_aggregate_indices.tex` |
+| Table 1 and every number in the text | `summary_numbers.py` | `outputs/summary_numbers.json` |
 
-The scripts also write some supplementary panels that the paper doesn't use, e.g. the cumulative index plots in `case1_indices/`. Each script's docstring lists its parameters and outputs.
+Each figure is written as `.pdf` (used in the manuscript) and `.png`. Every script can be run on its own from any working directory. The manuscript's `\includegraphics` paths use the file names above, so updating the paper's figures is a copy of `outputs/figures/*.pdf` into the manuscript's `figures/` folder.
 
 ## Repository layout
 
 ```
 src/
-  nts_utils.py                 shared maths: CGMY→NTS conversion, PWF construction, the three indices
-  generate_fig*.py             one script per group of paper figures (table above)
-lib/temStaPy_v0.5/             vendored NTS library (density, CDF, quantile, fitting)
-data/
-  spy_prices.csv               SPY adjusted close and daily log-return, 2015-01-02 to 2025-12-03
-  rates_3m.csv                 3-month rate (not used by the paper's figures)
-  spy_dividend_yield.csv       dividend yield (not used by the paper's figures)
-outputs/                       generated figures and tables (git-ignored)
+  nts_utils.py              the model: closed-form moments, channel construction,
+                            PWF and its derivative, the three indices, aggregates
+  paper_style.py            matplotlib style, colours and output paths shared by all figures
+  fig01_03_distributions.py
+  fig04_06_scale.py         one script per group of paper figures (table above)
+  fig07_skew.py
+  fig08_09_tail.py
+  fig10_14_empirical.py
+  summary_numbers.py        recomputes every number quoted in the text
+  run_all.py                runs everything
+lib/temStaPy_v0.5/          vendored NTS library (density, CDF, quantile, fitting)
+data/spy_prices.csv         SPY adjusted close and daily log-return, 2015-01-02 to 2025-12-03
+outputs/                    generated figures, tables and summary_numbers.json (git-ignored)
 ```
 
-### Parameterisation
+`data/rates_3m.csv` and `data/spy_dividend_yield.csv` are not used by the paper and are kept for a planned risk-neutral extension.
 
-The paper states the channels in CGMY form $(C, G, M, Y, \sigma)$. `temStaPy` uses the NTS vector $[\alpha, \theta, \beta, \gamma, \mu]$. `nts_utils.cgmy_to_nts()` converts between the two, and every PWF in the paper is built by `nts_utils.compute_pwf()`. To change a formula, change it in `nts_utils.py` rather than in an individual script.
+### Conventions worth knowing
 
-### Empirical calibration
+- **Colours and line styles** are fixed in `paper_style.py`: benchmark black solid, fearful red dashed, greedy blue dash-dotted. Every figure uses them.
+- **Variance matching** uses the closed-form variance $\gamma^2 + \beta^2 (2-\alpha)/(2\theta)$ in `nts_utils.nts_moments`, which agrees with `temStaPy.moments_NTS` to machine precision. `channel_specs(benchmark)` builds all three channels around any benchmark.
+- **The PWF derivative** is computed exactly as the density ratio $f_{\text{post}}(Q_{\text{prior}}(p)) / f_{\text{prior}}(Q_{\text{prior}}(p))$ rather than by finite differences, so the elasticity index is smooth.
+- **Probability grid**: $p_i = i/2001$, $i = 1,\dots,2000$. Integrated indices use the trapezoidal rule on this grid.
+- **Estimation** (`fig10_14_empirical.py`) uses `temStaPy.fitnts`: location and scale from the sample mean and standard deviation, shape parameters by least squares between the NTS CDF and a kernel-smoothed empirical CDF. This is a minimum-distance estimator, not maximum likelihood; the paper says so.
 
-`generate_fig10to14_empirical.py` fits NTS to $N = 2{,}746$ SPY daily log-returns using `temStaPy.fitnts`, in two steps:
+### Changing the experiment
 
-1. Location $\mu$ and scale $\gamma$ are set from the sample mean and standard deviation.
-2. The shape parameters $(\alpha, \theta, \beta)$ are chosen to minimise the mean squared distance between the standardised NTS CDF and a kernel-smoothed empirical CDF.
-
-The sample has skewness −0.58 and excess kurtosis 14.5. The fitted parameters are $\alpha = 1.07$, $\theta = 0.204$, $\beta = -0.00088$, $\gamma = 0.0112$ and $\mu = 0.00050$. The optimiser's result can differ in the fourth significant figure across numpy/scipy versions.
+The stylized benchmark is `STYLIZED_BENCHMARK` in `nts_utils.py`; the channel sizes are the keyword arguments of `channel_specs` (`scale_factors`, `skew_shift`, `tail_shift`). Change them there and rerun `run_all.py`; `summary_numbers.json` then lists every number that needs updating in the text.
 
 ## Dependencies
 
-`numpy`, `scipy`, `matplotlib`, `pandas` and `statsmodels` (see `requirements.txt`).
+Python 3.10 or later with `numpy >= 2.0`, `scipy`, `matplotlib`, `pandas` and `statsmodels` (see `requirements.txt`). Tested with numpy 2.5, scipy 1.18, pandas 3.0 and with the versions pinned in a fresh virtual environment.
 
-`temStaPy` is included under `lib/` so the results don't depend on a particular release of that library. The upstream project is [temStaPy](https://github.com/jay-gne/temStaPy) (also on PyPI), and its own licence applies to `lib/temStaPy_v0.5/`.
+`temStaPy` is vendored under `lib/` so that results do not depend on a particular release. The upstream project is [temStaPy](https://github.com/jay-gne/temStaPy); its own licence applies to `lib/temStaPy_v0.5/`. Two small compatibility edits were made to the vendored copy (`scipy.stats.kde` → `scipy.stats` imports).
 
 ## Citation
 

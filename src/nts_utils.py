@@ -1,202 +1,232 @@
 """
-NTS Utility Functions
-=====================
+Shared model code for the PWF-NTS paper.
 
-Common utilities for NTS distribution analysis and PWF computation.
+The normal tempered-stable (NTS) distribution is used in the parameterization
+of Kim, Rachev, Bianchi and Fabozzi (2010), which is the one implemented by
+the vendored temStaPy library:
 
-This module provides:
-- CGMY to NTS parameter conversion
-- PWF computation
-- Information-theoretic indices
-- Variance calculations
+    X = mu + beta (T - 1) + gamma sqrt(T) Z,     Z ~ N(0, 1) independent of T,
+
+where T is a classical tempered-stable subordinator with index alpha/2 in
+(0, 1), tempering parameter theta > 0 and E[T] = 1, so that
+
+    Var(T) = (2 - alpha) / (2 theta).
+
+The parameter vector is [alpha, theta, beta, gamma, mu] throughout:
+alpha in (0, 2) is the tail index, theta > 0 the tempering (lower = heavier
+tails), beta the asymmetry, gamma > 0 the diffusive scale and mu the location.
+
+Functions
+---------
+nts_moments           mean, variance, skewness, excess kurtosis (closed form)
+beta_for_skewness     beta (and the variance-preserving gamma) that hits a
+                      target skewness
+channel_specs         the three perturbation channels around any benchmark
+compute_pwf           w(p) = F_post(Q_prior(p))
+pwf_derivative        w'(p) = f_post(Q_prior(p)) / f_prior(Q_prior(p))
+logit_shift_GFI, signed_jensen_shannon, log_odds_elasticity
+                      the three information-theoretic indices
+aggregate_indices     integrated (scalar) versions of the indices
 """
 
-import numpy as np
-import sys
 import os
+import sys
 
-# Path setup: works from any cwd (file at NTS_PWF/src/nts_utils.py)
+import numpy as np
+from scipy.optimize import brentq
+
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_ROOT, 'lib', 'temStaPy_v0.5'))
 
-from temStaPy.distNTS import dnts, pnts, qnts
+from temStaPy.distNTS import dnts, pnts, qnts  # noqa: E402
+
+EPS = 1e-6          # probability clipping for the logit-based indices
+
+# Stylized benchmark of Section 4: unit variance, symmetric, excess kurtosis 3.
+STYLIZED_BENCHMARK = [1.2, 0.4, 0.0, 1.0, 0.0]
 
 
-def cgmy_to_nts(C, G, M, Y, mu=0, sigma=1):
+# ---------------------------------------------------------------------------
+# Moments and channel construction
+# ---------------------------------------------------------------------------
+def nts_moments(params):
+    """Closed-form mean, variance, skewness and excess kurtosis of NTS(params).
+
+    With v = Var(T) = (2 - alpha)/(2 theta), the cumulants of T are
+    k2 = v, k3 = v (2 - alpha/2)/theta, k4 = v (2 - alpha/2)(3 - alpha/2)/theta^2,
+    and X = mu + beta (T - 1) + gamma sqrt(T) Z gives
+    k2(X) = gamma^2 + beta^2 v,
+    k3(X) = beta^3 k3 + 3 beta gamma^2 v,
+    k4(X) = beta^4 k4 + 6 beta^2 gamma^2 k3 + 3 gamma^4 v.
     """
-    Convert CGMY parameters to NTS parameters for temStaPy.
+    alpha, theta, beta, gamma, mu = params
+    v = (2.0 - alpha) / (2.0 * theta)
+    a = 1.0 - alpha / 2.0                 # = v * theta
+    k3T = v * (2.0 - alpha / 2.0) / theta
+    k4T = v * (2.0 - alpha / 2.0) * (3.0 - alpha / 2.0) / theta ** 2
+    var = gamma ** 2 + beta ** 2 * v
+    k3 = beta ** 3 * k3T + 3.0 * beta * gamma ** 2 * v
+    k4 = beta ** 4 * k4T + 6.0 * beta ** 2 * gamma ** 2 * k3T + 3.0 * gamma ** 4 * v
+    return {
+        'mean': mu,
+        'variance': var,
+        'skewness': k3 / var ** 1.5,
+        'excess kurtosis': k4 / var ** 2,
+    }
 
-    Parameters:
-    -----------
-    C : float
-        Activity parameter
-    G : float
-        Right tempering parameter
-    M : float
-        Left tempering parameter
-    Y : float
-        Tail index (0 < Y < 2)
-    mu : float
-        Location parameter (default: 0)
-    sigma : float
-        Scale parameter (default: 1)
 
-    Returns:
-    --------
-    list : [alpha, theta, beta, gamma, mu]
-        NTS parameters for temStaPy
+def nts_variance(params):
+    return nts_moments(params)['variance']
+
+
+def gamma_for_variance(alpha, theta, beta, target_var):
+    """gamma such that NTS(alpha, theta, beta, gamma) has the target variance."""
+    v = (2.0 - alpha) / (2.0 * theta)
+    rest = target_var - beta ** 2 * v
+    if rest <= 0:
+        raise ValueError('beta too large for the target variance')
+    return float(np.sqrt(rest))
+
+
+def beta_for_skewness(alpha, theta, target_skew, target_var, mu=0.0):
+    """Parameters with the given skewness at the given variance.
+
+    beta is solved by root finding; gamma is then set so that the variance is
+    unchanged. Returns the full parameter vector.
     """
-    alpha = Y
-    theta = C * (G**Y + M**Y) / Y
-    beta_raw = (M**Y - G**Y) / (M**Y + G**Y)
-    gamma_param = sigma
-    beta = beta_raw * sigma
-    return [alpha, theta, beta, gamma_param, mu]
+    v = (2.0 - alpha) / (2.0 * theta)
+    bmax = 0.999 * np.sqrt(target_var / v)
+
+    def f(b):
+        g = gamma_for_variance(alpha, theta, b, target_var)
+        return nts_moments([alpha, theta, b, g, mu])['skewness'] - target_skew
+
+    b = brentq(f, -bmax, bmax)
+    return [alpha, theta, b, gamma_for_variance(alpha, theta, b, target_var), mu]
 
 
-def compute_variance_nts(C, G, M, Y, sigma):
+def channel_specs(benchmark, scale_factors=(1.4, 0.7), skew_shift=0.5, tail_shift=0.3):
+    """The three perturbation channels around a benchmark NTS.
+
+    scale : gamma multiplied by 1.4 (fearful) or 0.7 (greedy); other parameters fixed
+    skew  : skewness lowered (fearful) or raised (greedy) by `skew_shift`, with
+            gamma adjusted so the variance is unchanged
+    tail  : alpha lowered (fearful, heavier tails) or raised (greedy) by
+            `tail_shift`; variance is unchanged automatically when beta = 0 and
+            is restored through gamma otherwise
+
+    Returns {channel: {'benchmark': params, 'fearful': params, 'greedy': params}}.
     """
-    Compute theoretical variance of NTS distribution.
-
-    Formula: Var(X) = σ² + C(G^(Y-2) + M^(Y-2))/(2-Y)
-
-    Parameters:
-    -----------
-    C, G, M, Y : float
-        CGMY parameters
-    sigma : float
-        Scale parameter
-
-    Returns:
-    --------
-    float : Theoretical variance
-    """
-    if Y >= 2:
-        raise ValueError("Variance undefined for Y >= 2")
-
-    jump_var = C * (G**(Y-2) + M**(Y-2)) / (2 - Y)
-    total_var = sigma**2 + jump_var
-    return total_var
-
-
-def compute_pwf(u_grid, prior_params, post_params):
-    """
-    Compute Probability Weighting Function.
-
-    Formula: w(u) = F_post(Q_prior(u))
-
-    Parameters:
-    -----------
-    u_grid : array
-        Probability grid (0, 1)
-    prior_params : list
-        NTS parameters for prior distribution
-    post_params : list
-        NTS parameters for posterior distribution
-
-    Returns:
-    --------
-    array : PWF values w(u)
-    """
-    q_prior = qnts(u_grid, prior_params)
-    w = pnts(q_prior, post_params)
-    return w
+    alpha, theta, beta, gamma, mu = benchmark
+    m = nts_moments(benchmark)
+    var0, skew0 = m['variance'], m['skewness']
+    hi, lo = scale_factors
+    specs = {
+        'scale': {
+            'benchmark': list(benchmark),
+            'fearful': [alpha, theta, beta, gamma * hi, mu],
+            'greedy': [alpha, theta, beta, gamma * lo, mu],
+        },
+        'skew': {
+            'benchmark': list(benchmark),
+            'fearful': beta_for_skewness(alpha, theta, skew0 - skew_shift, var0, mu),
+            'greedy': beta_for_skewness(alpha, theta, skew0 + skew_shift, var0, mu),
+        },
+        'tail': {
+            'benchmark': list(benchmark),
+            'fearful': [alpha - tail_shift, theta, beta,
+                        gamma_for_variance(alpha - tail_shift, theta, beta, var0), mu],
+            'greedy': [alpha + tail_shift, theta, beta,
+                       gamma_for_variance(alpha + tail_shift, theta, beta, var0), mu],
+        },
+    }
+    return specs
 
 
-def safe_clip(arr, epsilon=1e-6):
-    """Clip array to [epsilon, 1-epsilon] to avoid log(0)"""
-    return np.clip(arr, epsilon, 1-epsilon)
+# ---------------------------------------------------------------------------
+# PWF
+# ---------------------------------------------------------------------------
+def probability_grid(n=2000):
+    """n interior points p_i = i/(n+1), avoiding 0 and 1."""
+    return np.arange(1, n + 1) / (n + 1.0)
 
 
-def logit_shift_GFI(w, p, epsilon=1e-6):
-    """
-    Logit-shift greed-fear index with Fisher-information normalization.
-
-    Formula: G_FI(p) = [logit(w(p)) - logit(p)] / sqrt[p(1-p)]
-    """
-    w_clip = safe_clip(w, epsilon)
-    p_clip = safe_clip(p, epsilon)
-
-    logit_w = np.log(w_clip / (1 - w_clip))
-    logit_p = np.log(p_clip / (1 - p_clip))
-
-    G = logit_w - logit_p
-    G_FI = G / np.sqrt(p_clip * (1 - p_clip))
-
-    return G_FI
+def compute_pwf(p, prior, post):
+    """w(p) = F_post(Q_prior(p))."""
+    q = qnts(np.asarray(p, dtype=float), prior)
+    return pnts(q, post)
 
 
-def kl_divergence_bernoulli(a, b, epsilon=1e-6):
-    """KL divergence between Bernoulli(a) and Bernoulli(b)"""
-    a_clip = safe_clip(a, epsilon)
-    b_clip = safe_clip(b, epsilon)
-
-    term1 = a_clip * np.log(a_clip / b_clip)
-    term2 = (1 - a_clip) * np.log((1 - a_clip) / (1 - b_clip))
-
-    return term1 + term2
+def pwf_derivative(p, prior, post):
+    """w'(p) = f_post(Q_prior(p)) / f_prior(Q_prior(p)), evaluated exactly."""
+    q = qnts(np.asarray(p, dtype=float), prior)
+    return dnts(q, post) / dnts(q, prior)
 
 
-def signed_jensen_shannon(w, p, epsilon=1e-6):
-    """
-    Signed Jensen-Shannon index.
-
-    Formula: S_JS(p) = sgn(w(p) - p) * sqrt(2 * JSD(p))
-    where JSD(p) = 0.5 * [KL(w||m) + KL(p||m)], m = (w+p)/2
-    """
-    w_clip = safe_clip(w, epsilon)
-    p_clip = safe_clip(p, epsilon)
-
-    m = (w_clip + p_clip) / 2.0
-
-    kl_wm = kl_divergence_bernoulli(w_clip, m, epsilon)
-    kl_pm = kl_divergence_bernoulli(p_clip, m, epsilon)
-
-    JSD = 0.5 * (kl_wm + kl_pm)
-
-    sign = np.sign(w_clip - p_clip)
-    S_JS = sign * np.sqrt(2 * JSD)
-
-    return S_JS
+def safe_clip(arr, epsilon=EPS):
+    return np.clip(arr, epsilon, 1.0 - epsilon)
 
 
-def log_odds_elasticity(w, p, epsilon=1e-6):
-    """
-    Log-odds elasticity (derivative index).
-
-    Formula: E(p) = d/dp[logit(w(p)) - logit(p)]
-           = w'(p) / [w(p)(1-w(p))] - 1 / [p(1-p)]
-    """
-    w_clip = safe_clip(w, epsilon)
-    p_clip = safe_clip(p, epsilon)
-
-    # Compute derivative using numerical gradient
-    dw_dp = np.gradient(w_clip, p_clip, edge_order=2)
-
-    # Elasticity formula
-    term1 = dw_dp / (w_clip * (1 - w_clip))
-    term2 = 1.0 / (p_clip * (1 - p_clip))
-
-    E = term1 - term2
-
-    return E
+# ---------------------------------------------------------------------------
+# Indices
+# ---------------------------------------------------------------------------
+def classical_index(w, p):
+    """gamma(p) = (w(p) - p) / (p (1 - p))."""
+    return (w - p) / (p * (1.0 - p))
 
 
-def jensen_shannon_divergence(w, p, epsilon=1e-6):
-    """
-    Jensen-Shannon divergence between w and p.
+def logit_shift_GFI(w, p, epsilon=EPS):
+    """G_FI(p) = [logit w(p) - logit p] / sqrt(p (1 - p))."""
+    w = safe_clip(w, epsilon)
+    p = safe_clip(p, epsilon)
+    G = np.log(w / (1 - w)) - np.log(p / (1 - p))
+    return G / np.sqrt(p * (1 - p))
 
-    Formula: JSD(p) = 0.5 * [KL(w||m) + KL(p||m)]
-    where m = (w+p)/2
-    """
-    w_clip = safe_clip(w, epsilon)
-    p_clip = safe_clip(p, epsilon)
 
-    m = (w_clip + p_clip) / 2.0
+def _kl_bernoulli(a, b):
+    return a * np.log(a / b) + (1 - a) * np.log((1 - a) / (1 - b))
 
-    kl_wm = kl_divergence_bernoulli(w_clip, m, epsilon)
-    kl_pm = kl_divergence_bernoulli(p_clip, m, epsilon)
 
-    JSD = 0.5 * (kl_wm + kl_pm)
+def jensen_shannon_divergence(w, p, epsilon=EPS):
+    """JSD between Bernoulli(w) and Bernoulli(p), natural logarithms."""
+    w = safe_clip(w, epsilon)
+    p = safe_clip(p, epsilon)
+    m = 0.5 * (w + p)
+    return 0.5 * (_kl_bernoulli(w, m) + _kl_bernoulli(p, m))
 
-    return JSD
+
+def signed_jensen_shannon(w, p, epsilon=EPS):
+    """S_JS(p) = sgn(w(p) - p) sqrt(2 JSD(p)), bounded by sqrt(2 ln 2)."""
+    return np.sign(w - p) * np.sqrt(2.0 * jensen_shannon_divergence(w, p, epsilon))
+
+
+def log_odds_elasticity(w, p, wprime, epsilon=EPS):
+    """E(p) = d/dp [logit w(p) - logit p] = w'(p)/(w(1-w)) - 1/(p(1-p))."""
+    w = safe_clip(w, epsilon)
+    p = safe_clip(p, epsilon)
+    return wprime / (w * (1 - w)) - 1.0 / (p * (1 - p))
+
+
+def all_indices(p, prior, post):
+    """PWF, its derivative and the three indices on the grid p."""
+    w = compute_pwf(p, prior, post)
+    wp = pwf_derivative(p, prior, post)
+    return {
+        'w': w,
+        'wprime': wp,
+        'gamma': classical_index(w, p),
+        'G_FI': logit_shift_GFI(w, p),
+        'S_JS': signed_jensen_shannon(w, p),
+        'E': log_odds_elasticity(w, p, wp),
+    }
+
+
+def aggregate_indices(p, idx):
+    """Integrals over p of G_FI, S_JS and |E|, plus |G_FI| and |S_JS|."""
+    return {
+        'int_GFI': float(np.trapezoid(idx['G_FI'], p)),
+        'int_abs_GFI': float(np.trapezoid(np.abs(idx['G_FI']), p)),
+        'int_SJS': float(np.trapezoid(idx['S_JS'], p)),
+        'int_abs_SJS': float(np.trapezoid(np.abs(idx['S_JS']), p)),
+        'int_abs_E': float(np.trapezoid(np.abs(idx['E']), p)),
+    }
