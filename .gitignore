@@ -7,11 +7,8 @@ __pycache__/
 venv/
 .env
 
-# Figures / outputs (regenerable)
-outputs/**/*.pdf
-outputs/**/*.png
-outputs/**/*.csv
-outputs/**/*.tex
+# Generated figures, tables and numbers (regenerable with src/run_all.py)
+outputs/**
 !outputs/.gitkeep
 
 # IDE

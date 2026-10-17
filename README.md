@@ -22,7 +22,9 @@ where $Q_{\text{prior}}$ is the prior quantile function and $F_{\text{post}}$ th
 
 Both distributions are **normal tempered-stable (NTS)** in the parameterization of Kim, Rachev, Bianchi and Fabozzi (2010), which is what the vendored `temStaPy` library implements:
 
-$$X = \mu + \beta\,(T-1) + \gamma\sqrt{T}\,Z, \qquad T \sim \text{tempered-stable subordinator with } \mathbb{E}[T]=1,\ \operatorname{Var}(T) = \tfrac{2-\alpha}{2\theta}.$$
+$$X = \mu + \beta (T-1) + \gamma \sqrt{T} Z,$$
+
+where $T$ is a tempered-stable subordinator with $\mathbb{E}[T] = 1$ and $\mathrm{Var}(T) = (2-\alpha)/(2\theta)$, and $Z$ is standard normal, independent of $T$.
 
 The parameter vector is always `[alpha, theta, beta, gamma, mu]`: tail index, tempering, asymmetry, scale, location. The posterior differs from the prior along one of three **channels**, each with the variance held fixed:
 
