@@ -1,14 +1,15 @@
 """
-Generate Clean Zoomed Publication Figure for Case 2
-====================================================
+Figure 7: PWF deviation delta(p) = w(p) - p for the skew (asymmetry) channel.
 
-Creates a single, clean publication-quality figure showing:
-- PWF Deviations with enhanced visualization
-- Minimal clutter, maximum clarity
-- Publication-ready formatting
+Parameters: mu=0, C=0.6, Y=1.2.
+    Benchmark:             G=M=5,       sigma=1.00
+    Fearful (left-skew):   G=1,  M=15,  sigma=0.85
+    Greedy (right-skew):   G=15, M=1,   sigma=0.85
+sigma is lowered for the skewed cases to keep their variance close to the
+benchmark's.
 
-Author: Akash Deep
-Date: October 23, 2025
+Output: outputs/case2_deviation/Figure_2i_CLEAN_Deviation.{png,pdf} (used in
+the paper), plus zoomed and minimal variants.
 """
 
 import numpy as np
@@ -23,7 +24,7 @@ sys.path.insert(0, os.path.join(_ROOT, 'lib', 'temStaPy_v0.5'))
 from temStaPy.distNTS import dnts, pnts, qnts
 
 # Publication style: larger fonts relative to plot, smaller physical figsize
-# (per Lindquist review: "reduce the size and make the text on it larger")
+# so the text stays legible when the figure is scaled to 0.7\textwidth.
 plt.rcParams.update({
     'font.size': 14,
     'axes.titlesize': 15,

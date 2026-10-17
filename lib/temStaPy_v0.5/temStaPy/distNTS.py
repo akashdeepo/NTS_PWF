@@ -3,7 +3,7 @@ import pandas as pd
 import functools
 import cmath
 
-from scipy.stats.kde import gaussian_kde
+from scipy.stats import gaussian_kde
 from scipy.optimize import minimize
 from statsmodels.distributions.empirical_distribution import ECDF
 

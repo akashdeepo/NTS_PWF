@@ -4,7 +4,7 @@ import pybobyqa
 from scipy.stats import multivariate_normal
 from scipy.integrate import quad, cumulative_trapezoid
 from scipy.interpolate import PchipInterpolator
-from scipy.stats.kde import gaussian_kde
+from scipy.stats import gaussian_kde
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from .distSubTS import rsubTS, ipsubTS, dsubTS

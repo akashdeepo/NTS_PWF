@@ -1,54 +1,20 @@
 """
-Generate Figure 2(e) - Information-Theoretic Greed-Fear Indices
-===============================================================
+Figure 6: information-theoretic indices for the scale (volatility) channel.
 
-This script implements three novel information-theoretic indices for measuring
-greed and fear in probability weighting functions (PWFs) derived from Normal
-Tempered-Stable (NTS) distributions.
+For a PWF w(p) and objective probability p:
 
-Indices Implemented:
--------------------
-1. G_FI(p): Logit-shift greed-fear index with Fisher-information normalization
-   Formula: G_FI(p) = [logit(w(p)) - logit(p)] / sqrt[p(1-p)]
+1. G_FI(p) = [logit w(p) - logit p] / sqrt(p(1-p))   Fisher-normalized logit shift
+2. S_JS(p) = sgn(w(p) - p) * sqrt(2 * JSD(p))        signed Jensen-Shannon divergence
+3. E(p)    = d/dp [logit w(p) - logit p]              log-odds elasticity
 
-2. S_JS(p): Signed Jensen-Shannon divergence index
-   Formula: S_JS(p) = sgn(w(p) - p) * sqrt(2 * JSD(p))
-   where JSD is the Jensen-Shannon divergence between w and p
+plus the cumulative integral of each.
 
-3. E(p): Log-odds elasticity (derivative index)
-   Formula: E(p) = d/dp[logit(w(p)) - logit(p)]
+Parameters: C=0.6, Y=1.2, G=M=5; benchmark sigma=1.0, fearful sigma=1.4,
+greedy sigma=0.7.
 
-Plus cumulative integral plots showing accumulated greed-fear effects.
-
-Usage:
-------
-    python generate_figure_2e_information_theoretic.py
-
-Output:
--------
-Creates a dated folder (e.g., figures_2025-10-14_corrected_formulas/) containing:
-- Figure_2e1_LogitShift_GFI.{png,pdf}
-- Figure_2e2_JensenShannon_SJS.{png,pdf}
-- Figure_2e3_Elasticity_E.{png,pdf}
-- Figure_2e4_Cumulative_Scores.{png,pdf}
-- README.md (comprehensive documentation)
-
-Parameters:
------------
-Case 1 (Volatility Channel):
-- Benchmark: C=0.6, Y=1.2, G=M=5.0, sigma=1.0
-- Fearful: sigma=1.4 (higher volatility)
-- Greedy: sigma=0.7 (lower volatility)
-
-Dependencies:
--------------
-- numpy
-- matplotlib
-- temStaPy (included in lib/ directory)
-
-Author: Akash Deep (Texas Tech University)
-Date: October 2025
-Version: 2.0 (corrected G_FI formula with sqrt normalization)
+Output: outputs/case1_indices/Figure_2e{1,2,3,4}_*.{png,pdf}
+The paper uses Figure_2e1_LogitShift_GFI.pdf (Fig 6). Its y-axis is clamped
+to [-100, 100] because G_FI diverges as p approaches 0 or 1.
 """
 
 import numpy as np
@@ -62,7 +28,7 @@ sys.path.insert(0, os.path.join(_ROOT, 'lib', 'temStaPy_v0.5'))
 from temStaPy.distNTS import qnts, pnts
 
 # Publication style: larger fonts relative to plot, smaller physical figsize
-# (per Lindquist review: "reduce the size and make the text on it larger")
+# so the text stays legible when the figure is scaled to 0.7\textwidth.
 plt.rcParams.update({
     'font.size': 14,
     'axes.titlesize': 15,
@@ -204,7 +170,7 @@ ax.set_title('Figure 2(e1): Logit-shift greed-fear index', fontsize=13)
 ax.legend(fontsize=10)
 ax.grid(True, alpha=0.3)
 ax.set_xlim(0, 1)
-ax.set_ylim(-100, 100)  # Clamp y-axis for readability (per Alex/Brent review)
+ax.set_ylim(-100, 100)  # G_FI diverges near p=0 and p=1; clamp for readability
 plt.tight_layout()
 
 save_path = os.path.join(OUTPUT_DIR, 'Figure_2e1_LogitShift_GFI')
@@ -214,8 +180,8 @@ plt.close()
 print(f"  Saved: {save_path}.png and .pdf")
 
 # Compute aggregate scores
-G_FI_score_fear = np.trapz(G_FI_fear, p_grid)
-G_FI_score_greed = np.trapz(G_FI_greed, p_grid)
+G_FI_score_fear = np.trapezoid(G_FI_fear, p_grid)
+G_FI_score_greed = np.trapezoid(G_FI_greed, p_grid)
 print(f"  Aggregate G_FI scores: Fearful={G_FI_score_fear:.4f}, Greedy={G_FI_score_greed:.4f}")
 
 # ============================================================================
@@ -249,8 +215,8 @@ plt.close()
 print(f"  Saved: {save_path}.png and .pdf")
 
 # Compute aggregate scores
-S_JS_score_fear = np.trapz(S_JS_fear, p_grid)
-S_JS_score_greed = np.trapz(S_JS_greed, p_grid)
+S_JS_score_fear = np.trapezoid(S_JS_fear, p_grid)
+S_JS_score_greed = np.trapezoid(S_JS_greed, p_grid)
 print(f"  Aggregate S_JS scores: Fearful={S_JS_score_fear:.4f}, Greedy={S_JS_score_greed:.4f}")
 
 # ============================================================================

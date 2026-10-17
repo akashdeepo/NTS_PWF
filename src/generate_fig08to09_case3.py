@@ -1,49 +1,18 @@
 """
-Generate Figure 2(j-n) - Case 3: Tail-Thickness Channel
-========================================================
+Figures 8-9: the tail-thickness channel.
 
-This script implements Case 3 of the NTS-PWF analysis, isolating the effect
-of tail thickness by varying the activity index Y while holding μ, σ, C, G, M fixed.
+Varies the Blumenthal-Getoor index Y, with sigma adjusted so each case keeps
+the benchmark variance. Common: mu=0, C=0.6, G=M=5.
+    Benchmark (moderate tails):  Y=1.2, sigma=1.00
+    Fearful (thick tails):       Y=0.9, sigma=1.11
+    Greedy (thin tails):         Y=1.5, sigma=0.58
+(Y=1.6 cannot be variance-matched with sigma > 0, so Y=1.5 is used.)
 
-Figures Generated:
-------------------
-- Figure 2(j): PDFs f_X(x) - showing tail thickness differences
-- Figure 2(k): CDFs F_X(x) - showing probability accumulation in tails
-- Figure 2(l): PWFs w(u) - two-sided tilts for rare-event attitudes
-- Figure 2(m): Symmetric greed-fear index g(u) = w(u)/(1-u) - 1/u
-- Figure 2(n): Information-theoretic metrics (JSD, log-gain, elasticity)
+Panels: 2j PDFs, 2k CDFs, 2l PWFs, 2m classical greed-fear index,
+2n information-theoretic indices.
 
-Parameters (Dr. Rachev specifications):
----------------------------------------
-Common: μ=0, σ=1.0, C=0.6, G=5, M=5
-
-Benchmark (moderate tails):  Y=1.2
-Fearful (thick tails):       Y=0.9
-Greedy (thin tails):         Y=1.6
-
-Usage:
-------
-    python generate_case3_tail_channel.py
-
-Output:
--------
-Creates figures_2025-10-21_case3_tail/ containing:
-- Figure_2j_PDFs_Case3.{png,pdf}
-- Figure_2k_CDFs_Case3.{png,pdf}
-- Figure_2l_PWFs_Case3.{png,pdf}
-- Figure_2m_GreedFearIndex_Case3.{png,pdf}
-- Figure_2n_InfoMetrics_Case3.{png,pdf}
-- README.md (documentation and verification results)
-
-Dependencies:
--------------
-- numpy
-- scipy
-- matplotlib
-- temStaPy (included in lib/ directory)
-
-Author: Akash Deep (Texas Tech University)
-Date: October 21, 2025
+Output: outputs/case3_tail/Figure_2{j,k,l,m,n}_*.{png,pdf}
+The paper uses 2l (Fig 8) and 2n (Fig 9).
 """
 
 import numpy as np

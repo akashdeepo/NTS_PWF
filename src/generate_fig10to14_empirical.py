@@ -1,15 +1,11 @@
 """
-Empirical NTS-PWF Analysis: SPY Returns
-========================================
+Figures 10-14 and Tables 1-2: empirical analysis on SPY daily log-returns.
 
-This script performs the empirical analysis requested by Dr. Rachev:
-- Fit NTS parameters to SPY daily log-returns (P-measure)
-- Create channel perturbations (scale, skew, tail)
-- Compute PWFs and information-theoretic indices
-- Generate publication-ready figures
+1. Fit NTS parameters to SPY daily log-returns, 2015-2025 (physical measure).
+2. Perturb the fitted benchmark along the scale, skew and tail channels.
+3. Compute the PWFs and information-theoretic indices for each channel.
 
-Authors: Akash Deep et al.
-Date: December 2025
+Output: outputs/Figure_Empirical_*.{png,pdf} and outputs/Table_*.{csv,tex}
 """
 
 import numpy as np
@@ -44,8 +40,7 @@ DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'outputs')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Plotting style — bumped per second Lindquist review ("the text on figures
-# is too small"). Combined with the smaller per-panel figsizes below, the
+# Plotting style. Combined with the smaller per-panel figsizes below, the
 # fonts now print at a comfortable size when the figure is scaled to
 # width=0.7\textwidth in LaTeX.
 plt.rcParams.update({
@@ -127,7 +122,7 @@ def create_channel_perturbations(fitted_params):
     """
     Create benchmark + fearful + greedy perturbations for each channel.
 
-    Following Dr. Rachev's framework:
+    Channel construction:
     - Scale channel: vary gamma (σ) with factors 0.7, 1.0, 1.4
     - Skew channel: vary beta while adjusting gamma for variance matching
     - Tail channel: vary alpha (Y) with values 0.9, 1.2, 1.6

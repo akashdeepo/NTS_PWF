@@ -1,10 +1,8 @@
 """
-Generate Figure 2(a) — Overview of NTS Parameter Effects (fig_2a.pdf)
-======================================================================
+Figure 1: NTS densities under single-parameter perturbations.
 
-Single-panel overview density plot showing the benchmark NTS alongside four
-single-parameter perturbations and a standard-normal reference, matching the
-manuscript caption:
+Plots the benchmark NTS density against four perturbations and a
+standard-normal reference:
 
     Benchmark NTS (blue solid):     mu=0, sigma=1.0, C=0.6, G=M=5,    Y=1.2
     High volatility (green):        sigma=1.4   (scale channel)
@@ -13,14 +11,7 @@ manuscript caption:
     Thick tails (purple):           Y=0.9       (tail channel)
     Standard normal (black dashed): reference
 
-The original generator for this figure could not be located in the repo
-(possibly deleted); this script reconstructs it from the caption specification.
-
 Output: outputs/figure_overview/Figure_2a_Overview_PDFs.{png,pdf}
-
-Copy the PDF to PWF_for_NTS_Laws.../figures/fig_2a.pdf to use in the manuscript.
-
-Author: rebuilt 2026-05 to address Lindquist's "reduce size, larger text" review.
 """
 
 import numpy as np
