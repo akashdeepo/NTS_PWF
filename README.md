@@ -12,6 +12,10 @@ pip install -r requirements.txt
 python src/run_all.py
 ```
 
+![Each channel leaves its own signature in the PWF deviation](docs/channel_signatures.gif)
+
+*The paper's central result.* As beliefs about returns move from greedy to fearful along one channel at a time, with the variance held fixed, the deviation $w(p) - p$ changes sign once (scale), twice (skewness) or three times (tail thickness). The number of crossings identifies which feature of the return distribution a weighting function is responding to. (`python src/make_animation.py` regenerates the animation.)
+
 ## What the paper does
 
 A probability-weighting function (PWF) turns objective probabilities into decision weights. Instead of assuming a parametric shape, the paper derives the PWF from a change in beliefs about returns. With a *prior* return distribution and a *posterior* one,
